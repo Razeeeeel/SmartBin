@@ -1,40 +1,40 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <title>SmartBin - Compostable Detection</title>
+  <title>iPhone Smart Bin</title>
+  <!-- ✅ TensorFlow.js (must come first) -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.3.0"></script>
+
+  <!-- ✅ Teachable Machine image library -->
+  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8.4/dist/teachablemachine-image.min.js"></script>
 </head>
 <body>
-  <h1>SmartBin</h1>
-  <button id="startBtn">Start Camera</button>
+  <h1>Object Detection</h1>
+  <button onclick="init()">Start Camera</button>
   <div id="label"></div>
   <div id="webcam-container"></div>
-
-  <!-- ✅ Teachable Machine script only -->
-  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
 
   <script>
     const URL = "model/";
     let model, webcam, labelContainer;
-
-    document.getElementById("startBtn").addEventListener("click", init);
 
     async function init() {
       const modelURL = URL + "model.json";
       const metadataURL = URL + "metadata.json";
 
       model = await tmImage.load(modelURL, metadataURL);
-      webcam = new tmImage.Webcam(200, 200, true);
-      await webcam.setup();
+      webcam = new tmImage.Webcam(200, 200, true); // width, height, flip
+      await webcam.setup(); // request access to camera
       await webcam.play();
       window.requestAnimationFrame(loop);
 
+      // Append webcam canvas
       document.getElementById("webcam-container").appendChild(webcam.canvas);
       labelContainer = document.getElementById("label");
     }
 
     async function loop() {
-      webcam.update();
+      webcam.update(); // update the webcam frame
       await predict();
       window.requestAnimationFrame(loop);
     }
@@ -44,10 +44,12 @@
       prediction.sort((a, b) => b.probability - a.probability);
       const top = prediction[0];
 
+      // Display result
       labelContainer.innerHTML = `${top.className}: ${(top.probability * 100).toFixed(2)}%`;
 
+      // Send to ESP32 if confidence is high
       if (top.probability > 0.95) {
-        fetch(`http://192.168.1.22/move?type=${top.className}`);
+        fetch(`http://192.168.4.1/move?type=${top.className}`);
       }
     }
   </script>
