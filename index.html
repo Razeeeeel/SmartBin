@@ -8,7 +8,7 @@
   <h1>Object Detection</h1>
   <button onclick="init()">Start Camera</button>
   <div id="label"></div>
-  <video id="webcam" autoplay muted playsinline></video>
+  <div id="webcam"></div> <!-- Changed from <video> to <div> -->
 
   <script>
     const URL = "model/";
@@ -24,7 +24,7 @@
       await webcam.play();
       window.requestAnimationFrame(loop);
 
-      document.getElementById("webcam").appendChild(webcam.canvas);
+      document.getElementById("webcam").appendChild(webcam.canvas); // Correct usage
       labelContainer = document.getElementById("label");
     }
 
