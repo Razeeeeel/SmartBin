@@ -53,10 +53,10 @@
       prediction.sort((a, b) => b.probability - a.probability);
       const top = prediction[0];
 
-      labelContainer.innerHTML = ${top.className}: ${(top.probability * 100).toFixed(2)}%;
+      labelContainer.innerHTML = `${top.className}: ${(top.probability * 100).toFixed(2)}%`;
 
       if (top.probability > 0.95) {
-        fetch(http://192.168.4.1/move?type=${top.className}); // Change to your ESP32 IP
+        fetch(`http://192.168.4.1/move?type=${top.className}`); // Change to your ESP32 IP
       }
     }
   </script>
