@@ -20,16 +20,20 @@
 
       model = await tmImage.load(modelURL, metadataURL);
 
-      // Try to use back camera (ideal for mobile)
-      const constraints = {
-        video: {
-          facingMode: { ideal: "environment" }
-        },
-        audio: false
-      };
+      const flip = false;
 
-      webcam = new tmImage.Webcam(200, 200, false);
-      await webcam.setup(constraints);
+      // Try to use the back camera first
+      try {
+        webcam = new tmImage.Webcam(200, 200, flip);
+        await webcam.setup({
+          video: { facingMode: { exact: "environment" } },
+          audio: false
+        });
+      } catch (e) {
+        console.warn("Back camera not available. Using default camera.");
+        await webcam.setup(); // fallback to front
+      }
+
       await webcam.play();
       window.requestAnimationFrame(loop);
 
