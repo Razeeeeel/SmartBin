@@ -20,7 +20,7 @@
 
       model = await tmImage.load(modelURL, metadataURL);
 
-      // Try to use back camera if available
+      // Try to use back camera (ideal for mobile)
       const constraints = {
         video: {
           facingMode: { ideal: "environment" }
