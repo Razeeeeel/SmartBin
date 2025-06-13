@@ -2,9 +2,12 @@
 <html>
 <head>
   <title>iPhone Smart Bin</title>
-  <!-- This loads TensorFlow and Teachable Machine -->
+  <!-- Load TensorFlow.js first -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+  <!-- Then load Teachable Machine -->
   <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
 </head>
+
 <body>
   <h1>Smart Bin Detection</h1>
   <button onclick="init()">Start Camera</button>
