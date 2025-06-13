@@ -2,15 +2,15 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>SmartBin - Compostable Classifier</title>
+  <title>SmartBin - Compostable Detection</title>
 </head>
 <body>
-  <h1>SmartBin Classifier</h1>
+  <h1>SmartBin</h1>
   <button id="startBtn">Start Camera</button>
   <div id="label"></div>
   <div id="webcam-container"></div>
 
-  <!-- Load Teachable Machine -->
+  <!-- ✅ Teachable Machine script only -->
   <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
 
   <script>
@@ -23,8 +23,8 @@
       const modelURL = URL + "model.json";
       const metadataURL = URL + "metadata.json";
 
-      model = await tmImage.load(modelURL, metadataURL); // ✅ `tmImage` is now available
-      webcam = new tmImage.Webcam(200, 200, true); // width, height, flip
+      model = await tmImage.load(modelURL, metadataURL);
+      webcam = new tmImage.Webcam(200, 200, true);
       await webcam.setup();
       await webcam.play();
       window.requestAnimationFrame(loop);
@@ -47,7 +47,7 @@
       labelContainer.innerHTML = `${top.className}: ${(top.probability * 100).toFixed(2)}%`;
 
       if (top.probability > 0.95) {
-        fetch(`http://192.168.1.22/move?type=${top.className}`); // ESP32 IP
+        fetch(`http://192.168.1.22/move?type=${top.className}`);
       }
     }
   </script>
