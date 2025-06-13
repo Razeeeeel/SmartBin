@@ -1,20 +1,15 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <title>Smart Bin</title>
-
-  <!-- ✅ TensorFlow.js (important: this must be included first) -->
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.3.0/dist/tf.min.js"></script>
-
-  <!-- ✅ Teachable Machine image library -->
-  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8.4/dist/teachablemachine-image.min.js"></script>
+  <title>iPhone Smart Bin</title>
+  <!-- This loads TensorFlow and Teachable Machine -->
+  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
 </head>
 <body>
-  <h1>Smart Bin Object Detection</h1>
+  <h1>Smart Bin Detection</h1>
   <button onclick="init()">Start Camera</button>
   <div id="label"></div>
-  <div id="webcam-container"></div>
+  <video id="webcam" autoplay muted playsinline></video>
 
   <script>
     const URL = "model/";
@@ -25,12 +20,25 @@
       const metadataURL = URL + "metadata.json";
 
       model = await tmImage.load(modelURL, metadataURL);
-      webcam = new tmImage.Webcam(200, 200, true);
-      await webcam.setup();
+
+      // Use back camera if possible
+      const flip = false;
+      const constraints = {
+        video: {
+          facingMode: { exact: "environment" }
+        },
+        audio: false
+      };
+
+      webcam = new tmImage.Webcam(200, 200, flip);
+      await webcam.setup(constraints).catch(async err => {
+        alert("Back camera not available, using front camera instead.");
+        await webcam.setup(); // fallback to default (front)
+      });
+
       await webcam.play();
       window.requestAnimationFrame(loop);
-
-      document.getElementById("webcam-container").appendChild(webcam.canvas);
+      document.getElementById("webcam").appendChild(webcam.canvas);
       labelContainer = document.getElementById("label");
     }
 
