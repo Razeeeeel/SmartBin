@@ -13,45 +13,31 @@
   <div id="label"></div>
   <video id="webcam" autoplay muted playsinline></video>
 
-  <script>
+ <script>
   const URL = "model/";
-  let model, webcam, labelContainer;
+  let model, webcam, labelContainer, maxPredictions;
 
   async function init() {
     const modelURL = URL + "model.json";
     const metadataURL = URL + "metadata.json";
 
     model = await tmImage.load(modelURL, metadataURL);
+    maxPredictions = model.getTotalClasses();
 
-    const flip = false;
-    webcam = new tmImage.Webcam(200, 200, flip);
-
+    webcam = new tmImage.Webcam(200, 200, false); // false = do not flip
     try {
-      // Try to request the back camera
-      await webcam.setup({
-        video: {
-          facingMode: { ideal: "environment" }  // Use ideal instead of exact
-        }
-      });
-    } catch (error) {
-      console.warn("Back camera not available, falling back to default camera.");
-      try {
-        await webcam.setup(); // fallback to default camera
-      } catch (fallbackError) {
-        alert("Unable to access any camera.");
-        console.error(fallbackError);
-        return;
-      }
+      await webcam.setup({ facingMode: "environment" }); // back cam
+    } catch (e) {
+      alert("Back camera not available, using default.");
+      await webcam.setup(); // fallback
     }
+    
+    await webcam.play();
 
-    await webcam.play().catch(err => {
-      alert("Failed to start webcam playback.");
-      console.error(err);
-    });
-
-    window.requestAnimationFrame(loop);
     document.getElementById("webcam").appendChild(webcam.canvas);
     labelContainer = document.getElementById("label");
+    
+    window.requestAnimationFrame(loop);
   }
 
   async function loop() {
@@ -68,10 +54,10 @@
     labelContainer.innerHTML = `${top.className}: ${(top.probability * 100).toFixed(2)}%`;
 
     if (top.probability > 0.95) {
-      console.log(`Sending to ESP: ${top.className}`);
       fetch(`http://192.168.1.22/move?type=${top.className}`);
     }
   }
 </script>
+
 </body>
 </html> 
