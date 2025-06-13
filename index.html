@@ -1,19 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>SmartBin - Compostable Classifier</title>
 </head>
 <body>
-  <h1>SmartBin Detector</h1>
+  <h1>SmartBin Classifier</h1>
   <button id="startBtn">Start Camera</button>
   <div id="label"></div>
-  <video id="webcam" autoplay muted playsinline width="200" height="200"></video>
+  <div id="webcam-container"></div>
 
-  <script type="module">
-    import * as tmImage from "https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8.4/dist/teachablemachine-image.esm.js";
+  <!-- Load Teachable Machine -->
+  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
 
-    const URL = "model/"; // Make sure this folder exists with model.json etc.
+  <script>
+    const URL = "model/";
     let model, webcam, labelContainer;
 
     document.getElementById("startBtn").addEventListener("click", init);
@@ -22,13 +23,13 @@
       const modelURL = URL + "model.json";
       const metadataURL = URL + "metadata.json";
 
-      model = await tmImage.load(modelURL, metadataURL);
+      model = await tmImage.load(modelURL, metadataURL); // ✅ `tmImage` is now available
       webcam = new tmImage.Webcam(200, 200, true); // width, height, flip
       await webcam.setup();
       await webcam.play();
       window.requestAnimationFrame(loop);
 
-      document.getElementById("webcam").appendChild(webcam.canvas);
+      document.getElementById("webcam-container").appendChild(webcam.canvas);
       labelContainer = document.getElementById("label");
     }
 
@@ -46,7 +47,7 @@
       labelContainer.innerHTML = `${top.className}: ${(top.probability * 100).toFixed(2)}%`;
 
       if (top.probability > 0.95) {
-        fetch(`http://192.168.1.22/move?type=${top.className}`); // Replace with your ESP32 IP
+        fetch(`http://192.168.1.22/move?type=${top.className}`); // ESP32 IP
       }
     }
   </script>
