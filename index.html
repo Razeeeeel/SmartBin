@@ -23,7 +23,7 @@
       const metadataURL = URL + "metadata.json";
 
       model = await tmImage.load(modelURL, metadataURL);
-      webcam = new tmImage.Webcam(200, 200, true); // width, height, flip
+      webcam = new tmImage.Webcam(200, 200, false, true);  // width, height, flip
       await webcam.setup(); // request access to camera
       await webcam.play();
       window.requestAnimationFrame(loop);
