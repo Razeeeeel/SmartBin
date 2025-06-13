@@ -59,7 +59,7 @@
       labelContainer.innerHTML = `${top.className}: ${(top.probability * 100).toFixed(2)}%`;
 
       if (top.probability > 0.95) {
-        fetch(`http://192.168.4.22/move?type=${top.className}`);
+        fetch(`http://192.168.1.22/move?type=${top.className}`);
       }
     }
   </script>
