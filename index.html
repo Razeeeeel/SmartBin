@@ -1,18 +1,22 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>iPhone Smart Bin</title>
-  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
+  <meta charset="UTF-8">
+  <title>SmartBin - Compostable Classifier</title>
 </head>
 <body>
-  <h1>Object Detection</h1>
-  <button onclick="init()">Start Camera</button>
+  <h1>SmartBin Detector</h1>
+  <button id="startBtn">Start Camera</button>
   <div id="label"></div>
-  <div id="webcam"></div> <!-- Changed from <video> to <div> -->
+  <video id="webcam" autoplay muted playsinline width="200" height="200"></video>
 
-  <script>
-    const URL = "model/";
+  <script type="module">
+    import * as tmImage from "https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8.4/dist/teachablemachine-image.esm.js";
+
+    const URL = "model/"; // Make sure this folder exists with model.json etc.
     let model, webcam, labelContainer;
+
+    document.getElementById("startBtn").addEventListener("click", init);
 
     async function init() {
       const modelURL = URL + "model.json";
@@ -24,7 +28,7 @@
       await webcam.play();
       window.requestAnimationFrame(loop);
 
-      document.getElementById("webcam").appendChild(webcam.canvas); // Correct usage
+      document.getElementById("webcam").appendChild(webcam.canvas);
       labelContainer = document.getElementById("label");
     }
 
@@ -42,7 +46,7 @@
       labelContainer.innerHTML = `${top.className}: ${(top.probability * 100).toFixed(2)}%`;
 
       if (top.probability > 0.95) {
-        fetch(`http://192.168.1.22/move?type=${top.className}`); // ESP32 IP
+        fetch(`http://192.168.1.22/move?type=${top.className}`); // Replace with your ESP32 IP
       }
     }
   </script>
