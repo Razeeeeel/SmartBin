@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>iPhone Smart Bin</title>
+  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
+</head>
+<body>
+  <h1>Object Detection</h1>
+  <button onclick="init()">Start Camera</button>
+  <div id="label"></div>
+  <video id="webcam" autoplay muted playsinline></video>
+
+  <script>
+    const URL = "model/";
+    let model, webcam, labelContainer;
+
+    async function init() {
+      const modelURL = URL + "model.json";
+      const metadataURL = URL + "metadata.json";
+
+      model = await tmImage.load(modelURL, metadataURL);
+      webcam = new tmImage.Webcam(200, 200, true); // width, height, flip
+      await webcam.setup();
+      await webcam.play();
+      window.requestAnimationFrame(loop);
+
+      document.getElementById("webcam").appendChild(webcam.canvas);
+      labelContainer = document.getElementById("label");
+    }
+
+    async function loop() {
+      webcam.update();
+      await predict();
+      window.requestAnimationFrame(loop);
+    }
+
+    async function predict() {
+      const prediction = await model.predict(webcam.canvas);
+      prediction.sort((a, b) => b.probability - a.probability);
+      const top = prediction[0];
+
+      labelContainer.innerHTML = `${top.className}: ${(top.probability * 100).toFixed(2)}%`;
+
+      if (top.probability > 0.95) {
+        fetch(`http://192.168.4.1/move?type=${top.className}`); // ESP32 IP
+      }
+    }
+  </script>
+</body>
+</html>
