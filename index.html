@@ -11,29 +11,30 @@
   <video id="webcam" autoplay muted playsinline></video>
 
   <script>
-    const URL = "model/";
+    const URL = "model/"; // folder with model.json, metadata.json, weights.bin
     let model, webcam, labelContainer;
 
     async function init() {
       const modelURL = URL + "model.json";
       const metadataURL = URL + "metadata.json";
 
+      // Load the model
       model = await tmImage.load(modelURL, metadataURL);
 
+      // Use back camera if available
       const flip = false;
+      const constraints = {
+        video: {
+          facingMode: { exact: "environment" }
+        },
+        audio: false
+      };
 
-      // Try to use the back camera first
-      try {
-        webcam = new tmImage.Webcam(200, 200, flip);
-        await webcam.setup({
-          video: { facingMode: { exact: "environment" } },
-          audio: false
-        });
-      } catch (e) {
-        console.warn("Back camera not available. Using default camera.");
-        await webcam.setup(); // fallback to front
-      }
-
+      webcam = new tmImage.Webcam(200, 200, flip);
+      await webcam.setup(constraints).catch(err => {
+        alert("Failed to access back camera. Falling back to front camera.");
+        return webcam.setup(); // fallback to default
+      });
       await webcam.play();
       window.requestAnimationFrame(loop);
 
@@ -52,10 +53,10 @@
       prediction.sort((a, b) => b.probability - a.probability);
       const top = prediction[0];
 
-      labelContainer.innerHTML = `${top.className}: ${(top.probability * 100).toFixed(2)}%`;
+      labelContainer.innerHTML = ${top.className}: ${(top.probability * 100).toFixed(2)}%;
 
       if (top.probability > 0.95) {
-        fetch(`http://192.168.4.1/move?type=${top.className}`);
+        fetch(http://192.168.4.1/move?type=${top.className}); // Change to your ESP32 IP
       }
     }
   </script>
