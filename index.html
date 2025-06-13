@@ -11,30 +11,25 @@
   <video id="webcam" autoplay muted playsinline></video>
 
   <script>
-    const URL = "model/"; // folder with model.json, metadata.json, weights.bin
+    const URL = "model/";
     let model, webcam, labelContainer;
 
     async function init() {
       const modelURL = URL + "model.json";
       const metadataURL = URL + "metadata.json";
 
-      // Load the model
       model = await tmImage.load(modelURL, metadataURL);
 
-      // Use back camera if available
-      const flip = false;
+      // Try to use back camera if available
       const constraints = {
         video: {
-          facingMode: { exact: "environment" }
+          facingMode: { ideal: "environment" }
         },
         audio: false
       };
 
-      webcam = new tmImage.Webcam(200, 200, flip);
-      await webcam.setup(constraints).catch(err => {
-        alert("Failed to access back camera. Falling back to front camera.");
-        return webcam.setup(); // fallback to default
-      });
+      webcam = new tmImage.Webcam(200, 200, false);
+      await webcam.setup(constraints);
       await webcam.play();
       window.requestAnimationFrame(loop);
 
@@ -56,7 +51,7 @@
       labelContainer.innerHTML = `${top.className}: ${(top.probability * 100).toFixed(2)}%`;
 
       if (top.probability > 0.95) {
-        fetch(`http://192.168.4.1/move?type=${top.className}`); // Change to your ESP32 IP
+        fetch(`http://192.168.4.1/move?type=${top.className}`);
       }
     }
   </script>
