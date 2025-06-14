@@ -2,7 +2,7 @@
 <html>
 <head>
   <title>Smart Bin Detection</title>
-  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8.4/dist/teachablemachine-image.min.js"></script>
 </head>
 <body>
   <h1>Smart Bin Detection</h1>
@@ -11,12 +11,11 @@
   <video id="webcam" autoplay muted playsinline width="300" height="300" style="border:1px solid black;"></video>
 
   <script>
-    const URL = "model/"; // Folder with model.json, metadata.json, weights.bin
-    const ESP_IP = "192.168.1.22"; // Change this to your actual ESP32 IP
-
+    const URL = "model/";
+    const ESP_IP = "192.168.1.22"; // Make sure this is correct and static
     let model, webcam, labelContainer;
-    let lastClass = "";
-    let lastMoveTime = 0;
+    let lastSent = "";
+    let lastSentTime = 0;
 
     async function init() {
       const modelURL = URL + "model.json";
@@ -26,21 +25,20 @@
 
       const flip = false;
       const constraints = {
-        video: {
-          facingMode: { exact: "environment" } // Use back camera
-        },
+        video: { facingMode: { ideal: "environment" } },
         audio: false
       };
 
       webcam = new tmImage.Webcam(300, 300, flip);
-      await webcam.setup(constraints).catch(async err => {
-        alert("Back camera not available, using default camera.");
-        await webcam.setup(); // fallback to default
-      });
+      try {
+        await webcam.setup(constraints);
+      } catch (e) {
+        alert("Back camera not available. Using default camera.");
+        await webcam.setup(); // fallback
+      }
 
       await webcam.play();
       window.requestAnimationFrame(loop);
-
       document.getElementById("webcam").appendChild(webcam.canvas);
       labelContainer = document.getElementById("label");
     }
@@ -55,22 +53,20 @@
       const prediction = await model.predict(webcam.canvas);
       prediction.sort((a, b) => b.probability - a.probability);
       const top = prediction[0];
+      const currentTime = Date.now();
 
       labelContainer.innerHTML = `${top.className}: ${(top.probability * 100).toFixed(2)}%`;
 
-      const now = Date.now();
-      const cooldown = 3000; // 3 seconds
-
-      if (top.probability > 0.95 && top.className !== lastClass && now - lastMoveTime > cooldown) {
-        lastClass = top.className;
-        lastMoveTime = now;
+      if (top.probability > 0.95 && top.className !== lastSent && currentTime - lastSentTime > 3000) {
+        lastSent = top.className;
+        lastSentTime = currentTime;
 
         try {
-          const res = await fetch(`http://${192.168.1.22}/move?type=${top.className}`);
+          const res = await fetch(`http://${ESP_IP}/move?type=${top.className}`);
           const text = await res.text();
-          console.log("ESP response:", text);
+          console.log("ESP responded:", text);
         } catch (err) {
-          console.error("Failed to send to ESP:", err);
+          console.error("ESP request failed:", err);
         }
       }
     }
