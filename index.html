@@ -1,46 +1,39 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Smart Bin Detection</title>
-  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8.4/dist/teachablemachine-image.min.js"></script>
+  <title>Smart Bin</title>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.9.0/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
 </head>
 <body>
   <h1>Smart Bin Detection</h1>
   <button onclick="init()">Start Camera</button>
   <div id="label"></div>
-  <video id="webcam" autoplay muted playsinline width="300" height="300" style="border:1px solid black;"></video>
+  <div id="webcam-container"></div>
 
   <script>
     const URL = "model/";
-    const ESP_IP = "192.168.1.22"; // Make sure this is correct and static
     let model, webcam, labelContainer;
-    let lastSent = "";
-    let lastSentTime = 0;
 
     async function init() {
       const modelURL = URL + "model.json";
       const metadataURL = URL + "metadata.json";
 
       model = await tmImage.load(modelURL, metadataURL);
+      webcam = new tmImage.Webcam(300, 300, false);
 
-      const flip = false;
-      const constraints = {
-        video: { facingMode: { ideal: "environment" } },
-        audio: false
-      };
-
-      webcam = new tmImage.Webcam(300, 300, flip);
       try {
-        await webcam.setup(constraints);
-      } catch (e) {
-        alert("Back camera not available. Using default camera.");
+        await webcam.setup({ facingMode: "environment" }); // back camera
+      } catch (err) {
+        alert("Back cam not found. Using default.");
         await webcam.setup(); // fallback
       }
 
       await webcam.play();
-      window.requestAnimationFrame(loop);
-      document.getElementById("webcam").appendChild(webcam.canvas);
+      document.getElementById("webcam-container").appendChild(webcam.canvas);
       labelContainer = document.getElementById("label");
+
+      window.requestAnimationFrame(loop);
     }
 
     async function loop() {
@@ -53,21 +46,10 @@
       const prediction = await model.predict(webcam.canvas);
       prediction.sort((a, b) => b.probability - a.probability);
       const top = prediction[0];
-      const currentTime = Date.now();
-
       labelContainer.innerHTML = `${top.className}: ${(top.probability * 100).toFixed(2)}%`;
 
-      if (top.probability > 0.95 && top.className !== lastSent && currentTime - lastSentTime > 3000) {
-        lastSent = top.className;
-        lastSentTime = currentTime;
-
-        try {
-          const res = await fetch(`http://${ESP_IP}/move?type=${top.className}`);
-          const text = await res.text();
-          console.log("ESP responded:", text);
-        } catch (err) {
-          console.error("ESP request failed:", err);
-        }
+      if (top.probability > 0.95) {
+        fetch(`http://192.168.1.22/move?type=${top.className}`);
       }
     }
   </script>
