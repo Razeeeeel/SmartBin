@@ -10,7 +10,7 @@
   <button onclick="move('right')">Right</button>
 
   <script>
-    const ip = "http://192.168.1.12"; 
+    const ip = "http://192.168.1.12"; // Replace with your actual ESP32 IP
 
     function move(cmd) {
       fetch(`${ip}/?cmd=${cmd}`)
