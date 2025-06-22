@@ -1,56 +1,21 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Smart Bin</title>
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.9.0/dist/tf.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@0.8/dist/teachablemachine-image.min.js"></script>
+  <title>Servo Controller</title>
 </head>
 <body>
-  <h1>Smart Bin Detection</h1>
-  <button onclick="init()">Start Camera</button>
-  <div id="label"></div>
-  <div id="webcam-container"></div>
+  <h1>Control Servo</h1>
+  <button onclick="move('left')">Left</button>
+  <button onclick="move('center')">Center</button>
+  <button onclick="move('right')">Right</button>
 
   <script>
-    const URL = "model/";
-    let model, webcam, labelContainer;
+    const ip = "http://192.168.1.12"; 
 
-    async function init() {
-      const modelURL = URL + "model.json";
-      const metadataURL = URL + "metadata.json";
-
-      model = await tmImage.load(modelURL, metadataURL);
-      webcam = new tmImage.Webcam(300, 300, false);
-
-      try {
-        await webcam.setup({ facingMode: "environment" }); // back camera
-      } catch (err) {
-        alert("Back cam not found. Using default.");
-        await webcam.setup(); // fallback
-      }
-
-      await webcam.play();
-      document.getElementById("webcam-container").appendChild(webcam.canvas);
-      labelContainer = document.getElementById("label");
-
-      window.requestAnimationFrame(loop);
-    }
-
-    async function loop() {
-      webcam.update();
-      await predict();
-      window.requestAnimationFrame(loop);
-    }
-
-    async function predict() {
-      const prediction = await model.predict(webcam.canvas);
-      prediction.sort((a, b) => b.probability - a.probability);
-      const top = prediction[0];
-      labelContainer.innerHTML = `${top.className}: ${(top.probability * 100).toFixed(2)}%`;
-
-      if (top.probability > 0.95) {
-        fetch(`http://192.168.1.22/move?type=${top.className}`);
-      }
+    function move(cmd) {
+      fetch(`${ip}/?cmd=${cmd}`)
+        .then(res => res.text())
+        .then(text => alert(text));
     }
   </script>
 </body>
